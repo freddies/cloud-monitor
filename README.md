@@ -314,7 +314,7 @@ The dashboard provides a real-time operational view with auto-refresh every 5 se
 ### Screenshots
 
 > After starting the system, visit `http://localhost:5000` to see the live dashboard populate as the simulator generates metrics and anomalies flow through the pipeline.
-<img width="807" height="717" alt="Screenshot 2026-03-26 at 9 48 24 AM" src="https://github.com/user-attachments/assets/869c2131-73e1-4b21-8f59-7c640d619252" />
+<img width="807" height="717" alt="Screenshot 2026-03-26 at 9 48 24 AM" src="https://github.com/user-attachments/assets/50d0a1f8-9e8c-4fb4-bdfb-ff4865c44c9e" />
 
 ---
 
