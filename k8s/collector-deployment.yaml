@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collector
+  namespace: cloud-monitor
+  labels:
+    app: collector
+    component: data-collection
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: collector
+  template:
+    metadata:
+      labels:
+        app: collector
+        component: data-collection
+    spec:
+      containers:
+        - name: collector
+          image: cloud-monitor-collector:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: cloud-monitor-config
+            - secretRef:
+                name: cloud-monitor-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - "-c"
+                - "import redis; r=redis.Redis(host='redis-service'); r.ping()"
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+      restartPolicy: Always

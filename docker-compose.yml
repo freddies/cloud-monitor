@@ -1,0 +1,119 @@
+version: '3.9'
+
+services:
+  # ── Redis ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: cloud-monitor-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - monitor-net
+
+  # ── Collector Service ─────────────────────────────────
+  collector:
+    build:
+      context: .
+      dockerfile: Dockerfile.collector
+    container_name: cloud-monitor-collector
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - COLLECTION_INTERVAL_SECONDS=10
+      - LOG_LEVEL=INFO
+      - APP_ENV=production
+    restart: unless-stopped
+    networks:
+      - monitor-net
+
+  # ── Anomaly Detector Service ──────────────────────────
+  detector:
+    build:
+      context: .
+      dockerfile: Dockerfile.detector
+    container_name: cloud-monitor-detector
+    depends_on:
+      redis:
+        condition: service_healthy
+      collector:
+        condition: service_started
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ANOMALY_THRESHOLD=0.85
+      - MODEL_RETRAIN_INTERVAL_HOURS=24
+      - LOG_LEVEL=INFO
+      - APP_ENV=production
+    volumes:
+      - model-data:/app/data/models
+    restart: unless-stopped
+    networks:
+      - monitor-net
+
+  # ── Alert Manager Service ─────────────────────────────
+  alertmanager:
+    build:
+      context: .
+      dockerfile: Dockerfile.alertmanager
+    container_name: cloud-monitor-alertmanager
+    depends_on:
+      redis:
+        condition: service_healthy
+      detector:
+        condition: service_started
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ALERT_COOLDOWN_MINUTES=15
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_SNS_TOPIC_ARN=${AWS_SNS_TOPIC_ARN:-}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - LOG_LEVEL=INFO
+      - APP_ENV=production
+    restart: unless-stopped
+    networks:
+      - monitor-net
+
+  # ── Dashboard Service ─────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: cloud-monitor-dashboard
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "5001:5000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DASHBOARD_HOST=0.0.0.0
+      - DASHBOARD_PORT=5000
+      - LOG_LEVEL=INFO
+      - APP_ENV=production
+    restart: unless-stopped
+    networks:
+      - monitor-net
+
+volumes:
+  redis-data:
+  model-data:
+
+networks:
+  monitor-net:
+    driver: bridge

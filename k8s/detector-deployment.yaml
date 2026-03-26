@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: detector
+  namespace: cloud-monitor
+  labels:
+    app: detector
+    component: anomaly-detection
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: detector
+  template:
+    metadata:
+      labels:
+        app: detector
+        component: anomaly-detection
+    spec:
+      containers:
+        - name: detector
+          image: cloud-monitor-detector:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: cloud-monitor-config
+            - secretRef:
+                name: cloud-monitor-secrets
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          volumeMounts:
+            - name: model-storage
+              mountPath: /app/data/models
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - "-c"
+                - "import redis; r=redis.Redis(host='redis-service'); r.ping()"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: model-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-pvc
+  namespace: cloud-monitor
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: cloud-monitor
+  labels:
+    app: alertmanager
+    component: alerting
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+        component: alerting
+    spec:
+      containers:
+        - name: alertmanager
+          image: cloud-monitor-alertmanager:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: cloud-monitor-config
+            - secretRef:
+                name: cloud-monitor-secrets
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - "-c"
+                - "import redis; r=redis.Redis(host='redis-service'); r.ping()"
+            initialDelaySeconds: 15
+            periodSeconds: 30
+      restartPolicy: Always

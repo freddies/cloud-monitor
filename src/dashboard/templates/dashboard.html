@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Cloud Monitor - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1>🔍 AI Cloud Monitor</h1>
+                <span class="subtitle">Intelligent Incident Detection</span>
+            </div>
+            <div class="header-right">
+                <div class="status-indicator" id="system-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Connecting...</span>
+                </div>
+                <span class="last-updated" id="last-updated">--</span>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="stat-metrics">--</div>
+                    <div class="stat-label">Metric Series</div>
+                </div>
+            </div>
+            <div class="stat-card stat-anomalies">
+                <div class="stat-icon">🚨</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="stat-anomalies">--</div>
+                    <div class="stat-label">Recent Anomalies</div>
+                </div>
+            </div>
+            <div class="stat-card stat-alerts">
+                <div class="stat-icon">🔔</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="stat-alerts">--</div>
+                    <div class="stat-label">Active Alerts</div>
+                </div>
+            </div>
+            <div class="stat-card stat-services">
+                <div class="stat-icon">🖥️</div>
+                <div class="stat-content">
+                    <div class="stat-value" id="stat-services">--</div>
+                    <div class="stat-label">Services Monitored</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Grid -->
+        <section class="main-grid">
+            <!-- Charts Column -->
+            <div class="charts-column">
+                <!-- Severity Distribution -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Anomaly Severity Distribution</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="severity-chart" class="chart-container"></div>
+                    </div>
+                </div>
+
+                <!-- Metrics Time Series -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Metrics Timeline</h3>
+                        <div class="chart-controls">
+                            <select id="host-select" class="select-input">
+                                <option value="">Select Host</option>
+                            </select>
+                            <select id="metric-select" class="select-input">
+                                <option value="">Select Metric</option>
+                            </select>
+                            <button id="load-chart-btn" class="btn btn-primary">Load</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="metrics-chart" class="chart-container-lg"></div>
+                    </div>
+                </div>
+
+                <!-- Anomaly Timeline -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Anomaly Timeline</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="anomaly-timeline" class="chart-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar-column">
+                <!-- Service Health -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Service Health</h3>
+                    </div>
+                    <div class="card-body" id="service-health-list">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Recent Alerts -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Recent Alerts</h3>
+                    </div>
+                    <div class="card-body alert-list" id="alert-list">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Recent Anomalies -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Recent Anomalies</h3>
+                    </div>
+                    <div class="card-body anomaly-list" id="anomaly-list">
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>
